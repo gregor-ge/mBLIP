@@ -1,0 +1,77 @@
+# _target_ is hydra-lingo to point to the object (class, function) to instantiate
+_target_: trident.TridentDataModule
+# _recursive_: true would mean all keyword arguments are /already/ instantiated
+# when passed to `TridentDataModule`
+_recursive_: false
+
+# defaults across built-in datamodules
+#defaults:
+  # allows you to manually override on the cli with
+  # python run.py tokenizer.padding=true
+#  - /tokenizer/trident@dataset_cfg._method_.map.function.tokenizer
+
+datamodule_cfg:
+  # `datamodule_cfg` respects the configuration of your datamodule
+  #  - Keys:
+  #    - setup: glue function that calls dataset_cfg for each available split
+  #             and adds on_{before, after}_setup hooks
+  #      signature: fn(DataModule, stage, datamodule_cfg, *args, **kwargs)
+  #                 datamodule_cfg stores corresponding dataset_cfg in [`train`, `val`, `test`, `predict`]
+  #    - on_{before, after_setup}: function called {before, after} datamodule (and hence datasets) setup
+  #      signature: fn(Datamodule, stage, *args, **kwargs)
+  setup:
+    _target_: trident.utils.data.setup
+    _recursive_: false
+
+dataset_cfg:
+  # `dataset_cfg` respects the configuration of each dataset split and
+  # is called by the default `datamodule_cfg.setup`
+  # - WARNING: dataset_cfg depends on `datamodule_cfg.setup`,
+  #            overriding `datamodule.setup` opts out of `dataset_cfg`
+  # - Notes:
+  #   - The top-level configuration gets merged into `train`, `val`, `test` subsplits
+  #   - `train`, `val`, and `test` can have a special meta key: `_datasets_`
+  #   - `datamodule_cfg.setup` enables deep-integration to Huggingface `datasets`
+  #     - `_method_` allows specifying methods that are called after object instantiation
+  #   - configs/datamodule/{mnli, wikiann, xcopa_siqa-pretrained_zs.yaml
+  #     are good examples
+  _target_: datasets.load.load_dataset
+  # --- dataset_cfg-level namespace ---
+#  _method_: # get methods of _target_ object
+#    map: # dataset.map -> tokenization
+#      # kwargs for dataset.map
+#      function: ??? # ??? means inheriting config must set `function`
+#      batched: true
+#      num_proc: 1
+  # -----------------------------------
+  # the individual splits inherit the content of the dataset_cfg-level namespace
+  # to avoid repeating configuration
+  # - Notes:
+  #   - Each split can have a `_datasets_` attribute
+  train: null
+  val: null
+  test: null
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  _target_: torch.utils.data.dataloader.DataLoader
+#  collate_fn:
+#    _target_: transformers.data.data_collator.DataCollatorWithPadding
+#    tokenizer:
+#      _target_: transformers.AutoTokenizer.from_pretrained
+#      pretrained_model_name_or_path: ${module.model.pretrained_model_name_or_path}
+#      padding: true
+  # -----------------------------------
+  batch_size: 32
+  num_workers: 0
+  pin_memory: true
+  # the individual splits inherit the content of the dataset_cfg-level namespace
+  # to avoid repeating configuration
+  train:
+    shuffle: true
+  val:
+    shuffle: false
+  test:
+    shuffle: false

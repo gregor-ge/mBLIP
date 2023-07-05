@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trident-core"
+authors = [
+    {name = "Fabian David Schmidt", email = "fabian.david.schmidt@gmail.com"},
+]
+description = "A declarative deep learning framework"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+classifiers = [
+  "Environment :: Console",
+  "Natural Language :: English",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    "lightning >= 2.0.0",
+    "hydra-core >= 1.3.0",
+    "hydra-colorlog >= 1.2.0",
+    "hydra-optuna-sweeper >= 1.2.0",
+    "pytest",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "trident.__version__"}
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests/*", "src", "src/*"] 

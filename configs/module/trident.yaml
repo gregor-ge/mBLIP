@@ -1,0 +1,13 @@
+# _target_ is hydra-lingo to point to the object (class, function) to instantiate
+_target_: trident.TridentModule
+# _recursive_: true would mean all keyword arguments are /already/ instantiated
+# when passed to `TridentDataModule`
+_recursive_: false
+
+defaults:
+# interleaved with setup so instantiated later (recursive false)
+- /optimizer: ${optimizer}  # see config/optimizer/adamw.yaml for default
+- /scheduler: ${scheduler}  # see config/scheduler/linear_warm_up.yaml for default
+
+evaluation: ???
+model: ???

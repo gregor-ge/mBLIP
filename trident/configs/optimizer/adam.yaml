@@ -1,0 +1,4 @@
+_target_: transformers.optimization.Adam
+
+lr: 0.0002
+eps: 1e-8

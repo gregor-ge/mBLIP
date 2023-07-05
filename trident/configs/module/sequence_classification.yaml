@@ -1,0 +1,8 @@
+defaults:
+  - trident
+  - /evaluation: classification
+
+model:
+  _target_: transformers.AutoModelForSequenceClassification.from_pretrained
+  num_labels: ???
+  pretrained_model_name_or_path: ???

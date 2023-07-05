@@ -1,0 +1,22 @@
+# You can probably use a newer PyTorch version, too, but we used this one:
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch==2.0.1+cu117
+torchvision
+Pillow
+datasets
+transformers
+accelerate
+bitsandbytes
+lightning
+hydra-core
+opencv-python
+python-dotenv
+peft
+# Optional for logging
+wandb
+# For evaluation of image captioning; segmentation of Japanese, Chinese, Thai.
+pycocoevalcap
+spacy==3.5.3
+pythainlp
+sudachipy
+sudachidict_core

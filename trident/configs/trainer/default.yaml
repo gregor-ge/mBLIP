@@ -1,0 +1,3 @@
+_target_: lightning.Trainer
+
+max_epochs: 10

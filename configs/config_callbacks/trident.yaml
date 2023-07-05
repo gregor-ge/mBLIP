@@ -1,0 +1,28 @@
+# key in your config
+# i.e. config.datamodule.dataset_cfg in my experiments
+datamodule.dataset_cfg:
+  # for this config
+  # do config callback as specified below
+  _target_: trident.utils.hydra.expand
+  merge_keys: ["train", "val", "test"]
+  gen_keys: false
+
+datamodule.dataloader_cfg:
+  _target_: trident.utils.hydra.expand
+  merge_keys: ["train", "val", "test"]
+  gen_keys: true
+
+module.evaluation.prepare_cfg:
+  _target_: trident.utils.hydra.expand
+  merge_keys: ["val", "test"]
+  gen_keys: true
+
+module.evaluation.step_outputs:
+  _target_: trident.utils.hydra.expand
+  merge_keys: ["val", "test"]
+  gen_keys: true
+
+module.evaluation.metrics_cfg:
+  _target_: trident.utils.hydra.expand
+  merge_keys: ["val", "test"]
+  gen_keys: true

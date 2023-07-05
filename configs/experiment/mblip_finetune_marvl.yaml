@@ -1,0 +1,118 @@
+# @package _global_
+defaults:
+  - /evaluation/mblip_eval_classification@module.evaluation
+  - override /trainer: default.yaml # choose trainer from 'configs/trainer/'
+#  - override /module: mblip # not used by us but can be set to a file in configs/modules/
+  - override /datamodule: mblip_marvl
+  - override /callbacks: null
+  - override /config_callbacks: trident.yaml
+  - override /logger: wandb #csv #wandb.yaml
+
+seed: 42
+train: True
+
+data_prefix: /media/gregor/DATA/projects/wuerzburg 
+train_image_root: ${data_prefix}/mblip/data/images 
+train_data: ${data_prefix}/mblip/data
+xm3600_image_root: ${data_prefix}/iglue/datasets/Crossmodal3600/images
+flickr_image_root: ${data_prefix}/iglue/datasets/flickr30k/flickr_images
+gqa_image_root: ${data_prefix}/iglue/datasets/gqa/images
+marvl_img_root: ${data_prefix}/iglue/datasets/marvl/images
+
+blip_checkpoint: ${data_prefix}/mblip/checkpoints/blip2-flant5xl-nolm.bin
+blip_model: Salesforce/blip2-flan-t5-xl
+llm:  bigscience/mt0-xl #google/flan-t5-xl #bigscience/mt0-xl #bigscience/bloomz-7b1-mt
+tokenizer_name: ${llm}
+
+trainer:
+  num_sanity_val_steps: 0
+  max_epochs: 20
+  devices: 1
+  precision: 16
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 8
+  log_every_n_steps: 10
+  val_check_interval: 1.0
+#  strategy: deepspeed_stage_2
+#  limit_train_batches: 5
+#  limit_val_batches: 10
+
+
+datamodule:
+  dataloader_cfg:
+    train:
+      batch_size: 16
+      num_workers: 2
+    val:
+      batch_size: 8
+      num_workers: 0
+    test:
+      batch_size: 8
+      num_workers: 0
+  dataset_cfg:
+      _method_:
+        map:
+          function:
+            template:  'Based on the two images, is it correct to say "{}"? Yes or no?' #'Based on the two images, is the statement "{}" true? Yes or no?'
+            target2str: { "True": "yes", "False": "no" }
+
+module:
+  evaluation:
+    metrics_cfg:
+        acc:
+          kwargs:
+            image_ids: "outputs:left_image"
+    step_outputs:
+      outputs:
+        - "caption"
+      batch:
+        - "left_image"
+        - "text_label"
+  model:
+    _target_: src.modules.modeling.mblip.mBLIPModule 
+    blip_pretrained: ${blip_model}
+    blip_pretrained_checkpoint: ${blip_checkpoint}
+    lm_pretrained: /example/path/to/checkpoints/mt0-xl/05_29_2023_16_52_44-1-60663
+    train_checkpoint: /example/path/to/checkpoints/05_29_2023_16_52_44/checkpoints/1-60663.ckpt
+    load_8bit: True
+    freeze_vit: True
+    freeze_lm: True
+    freeze_qformer: False
+    freeze_projection: False
+    gradient_checkpoint: True
+    use_lora: lora_all
+    lora_alpha: 16
+    lora_r: 8
+    lora_dropout: 0.05
+  optimizer:
+    lr: 0.00001  #0.0005
+    weight_decay: 0.1
+  scheduler:
+    _target_: transformers.optimization.get_cosine_schedule_with_warmup
+    num_warmup_steps: 1000
+
+logger:
+  csv:
+    save_dir: ${hydra:runtime.output_dir}
+  wandb:
+    name: "finetune=marvl_${hydra:runtime.output_dir}"
+    project: "mblip"
+
+
+callbacks:
+  model_checkpoint_on_epoch:
+    _target_: src.tasks.vllm.checkpoint.mBLIPModelCheckpoint #lightning.pytorch.callbacks.ModelCheckpoint 
+    freeze_vit: ${module.model.freeze_vit}
+    freeze_qformer: ${module.model.freeze_qformer}
+    freeze_lm: ${module.model.freeze_lm}
+    freeze_projection: ${module.model.freeze_projection}
+    lora: True
+#    monitor: "" # name of the logged metric which determines when model is improving
+    every_n_epochs: 1
+    verbose: false
+    save_top_k: -1 # -1 -> all models are saved
+    save_last: false # additionaly always save model from last epoch
+    dirpath: "${hydra:runtime.output_dir}/checkpoints/"
+    auto_insert_metric_name: false
+  teardown:
+    _target_: src.tasks.vllm.checkpoint.TeardownCallback

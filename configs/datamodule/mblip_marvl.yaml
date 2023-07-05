@@ -1,0 +1,115 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        text_target_column: text_label
+        template: 'Based on the two images, is it correct to say "{}"? Yes or no? Answer in English:'
+        target2str: { "True": "yes", "False": "no" }
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImageMarvl
+        processor: ${blip_model}
+        image_root: ${marvl_img_root}
+        extension: ""
+  train:
+    split: train
+    path: json
+    data_files: ${train_data}/marvl/nlvr_train_en.json
+
+  val:
+    _datasets_:
+      nlvr_id_val:
+        split: train[:2000]
+        path: json
+        data_files: ${train_data}/marvl/nlvr_dev_id.json
+#      nlvr_sw_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_sw.json
+#      nlvr_ta_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_ta.json
+#      nlvr_tr_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_tr.json
+#      nlvr_zh_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_zh.json
+      nlvr_en_val:
+        split: train[:2000]
+        path: json
+        data_files: ${train_data}/marvl/nlvr_dev_en.json
+  test:
+    _datasets_:
+      marvl_id_test:
+        split: train
+        path: json
+        data_files: ${train_data}/marvl/marvl_test_id.json
+      marvl_sw_test:
+        split: train
+        path: json
+        data_files: ${train_data}/marvl/marvl_test_sw.json
+      marvl_ta_test:
+        split: train
+        path: json
+        data_files: ${train_data}/marvl/marvl_test_ta.json
+      marvl_tr_test:
+        split: train
+        path: json
+        data_files: ${train_data}/marvl/marvl_test_tr.json
+      marvl_zh_test:
+        split: train
+        path: json
+        data_files: ${train_data}/marvl/marvl_test_zh.json
+      nlvr_en_test:
+        split: train
+        path: json
+        data_files: ${train_data}/marvl/nlvr_test_en.json
+#      nlvr_id_val:
+#        split: train[:1000]
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_id.json
+#      nlvr_sw_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_sw.json
+#      nlvr_ta_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_ta.json
+#      nlvr_tr_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_tr.json
+#      nlvr_zh_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_zh.json
+#      nlvr_en_val:
+#        split: train[:1000]
+#        path: json
+#        data_files: ${train_data}/marvl/nlvr_dev_en.json
+        

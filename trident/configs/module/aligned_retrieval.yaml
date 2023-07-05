@@ -1,0 +1,12 @@
+_recursive_: false
+_target_: src.modules.base.TridentModule
+
+defaults:
+# interleaved with setup so instantiated later (recursive false)
+- /optimizer: adamw
+- /scheduler: linear_warm_up
+- /evaluation: tatoeba
+
+model:
+  _target_: transformers.AutoModel.from_pretrained
+  pretrained_model_name_or_path: ???

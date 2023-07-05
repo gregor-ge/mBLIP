@@ -1,0 +1,4 @@
+_target_: src.modules.huggingface.HFModel
+
+defaults:
+  - optimizer: adamw

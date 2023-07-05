@@ -1,0 +1,160 @@
+# @package _global_
+
+# to execute this experiment run:
+# python run.py experiment=mnli
+
+defaults:
+  - override hydra/job_logging: disabled
+
+work_dir: ${hydra:runtime.cwd}
+data_dir: ${work_dir}/data/
+print_config: False
+
+seed: 42
+test_after_training: True
+callbacks: null
+
+config_callbacks:
+  datamodule.dataset_cfg:
+    # for this config
+    # do config callback as specified below
+    _target_: trident.utils.hydra.expand
+    merge_keys: ["train", "val", "test"]
+    gen_keys: false
+
+  datamodule.dataloader_cfg:
+    _target_: trident.utils.hydra.expand
+    merge_keys: ["train", "val", "test"]
+    gen_keys: true
+
+  module.evaluation.prepare_cfg:
+    _target_: trident.utils.hydra.expand
+    merge_keys: ["val", "test"]
+    gen_keys: true
+
+  module.evaluation.step_outputs:
+    _target_: trident.utils.hydra.expand
+    merge_keys: ["val", "test"]
+    gen_keys: true
+
+  module.evaluation.metrics_cfg:
+    _target_: trident.utils.hydra.expand
+    merge_keys: ["val", "test"]
+    gen_keys: true
+
+
+trainer:
+  _target_: lightning.Trainer
+  max_epochs: 10
+  accelerator: cpu
+  enable_checkpointing: false
+
+optimized_metric: "val/mse_loss"
+
+module:
+  _target_: tests.helpers.modules.ToyModule
+  _recursive_: false
+  optimizer:
+    _target_: torch.optim.SGD
+    lr: 5
+  scheduler: null
+  model:
+    _target_: tests.helpers.modules.get_module
+
+  evaluation:
+    prepare_cfg:
+      batch: null  
+      outputs: null
+      step_outputs: null 
+
+    step_outputs:
+      outputs:
+        - preds
+      batch:
+        - labels
+    metrics_cfg:
+      mse_loss:
+        metric:
+          _partial_: true
+          _target_: torch.nn.functional.mse_loss
+        compute_on: "epoch_end"
+        kwargs: 
+          input: "outputs:preds"
+          target: "outputs:labels"
+
+datamodule:
+  _target_: trident.TridentDataModule
+  _recursive_: false
+  datamodule_cfg:
+    setup:
+      _target_: trident.utils.data.setup
+      _recursive_: false
+  dataset_cfg:
+    _target_: tests.helpers.modules.IdentityDataset
+    _recursive_: false
+    train:
+      _datasets_:
+        first_half:
+          X:
+            _target_: tests.helpers.modules.get_val_data
+            to_: 5
+          y:
+            # a bit convoluted to cast arange to float in hydra config
+            _target_: torch.Tensor.float
+            _args_:
+              - _target_: torch.arange
+                start: 1
+                end: 6
+        second_half:
+          X:
+            _target_: tests.helpers.modules.get_val_data
+            from_: 5
+          y:
+            # a bit convoluted to cast arange to float in hydra config
+            _target_: torch.Tensor.float
+            _args_:
+              - _target_: torch.arange
+                start: 6
+                end: 11
+    val:
+      X:
+        # a bit convoluted to cast arange to float in hydra config
+        _target_: torch.eye
+        _args_:
+          - 10
+      y:
+        # a bit convoluted to cast arange to float in hydra config
+        _target_: torch.Tensor.float
+        _args_:
+          - _target_: torch.arange
+            start: 1
+            end: 11
+    test:
+      X:
+        # a bit convoluted to cast arange to float in hydra config
+        _target_: torch.eye
+        _args_:
+          - 10
+      y:
+        # a bit convoluted to cast arange to float in hydra config
+        _target_: torch.Tensor.float
+        _args_:
+          - _target_: torch.arange
+            start: 1
+            end: 11
+  dataloader_cfg:
+    _target_: torch.utils.data.dataloader.DataLoader
+    collate_fn:
+      _target_: tests.helpers.modules.collate_fn
+      _partial_: true
+    batch_size: 10
+    num_workers: 0
+    pin_memory: true
+    # the individual splits inherit the content of the dataset_cfg-level namespace
+    # to avoid repeating configuration
+    train:
+      shuffle: false
+    val:
+      shuffle: false
+    test:
+      shuffle: false

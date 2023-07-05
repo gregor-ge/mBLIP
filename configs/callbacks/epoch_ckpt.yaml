@@ -1,0 +1,11 @@
+callbacks:
+  model_checkpoint_on_epoch:
+    _target_: lightning.pytorch.callbacks.ModelCheckpoint
+    monitor: null # name of the logged metric which determines when model is improving
+    mode: "max" # can be "max" or "min"
+    every_n_epochs: 1 # truncated length of MNLI train / 16
+    verbose: true
+    save_top_k: -1 # -1 -> all models are saved
+    save_last: false # additionaly always save model from last epoch
+    dirpath: "checkpoints/"
+    auto_insert_metric_name: false

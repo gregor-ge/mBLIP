@@ -1,0 +1,173 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: "{}"
+        max_len: 128
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${train_image_root}
+        extension: ""
+#    with_format:
+#      type: "torch"
+  train:
+    split: train[500:]
+    path: json
+    data_files: ${train_data}/pretrain/${train_file}  #ccs_synthetic_filtered_large_1000000_mt.json
+    _method_:
+      set_transform:
+        transform:
+          _target_: src.tasks.vllm.data.LoadTransformImage
+          processor: ${blip_model}
+          image_root: ${train_image_root}
+          extension: ""
+          train: True
+          overwrite_image_size: ${image_size}
+  val:
+    _datasets_:
+      val_split:
+        split: train[:500]
+        path: json
+        data_files: ${train_data}/pretrain/${train_file} #ccs_synthetic_filtered_large_1000000_mt.json
+      xvnli_en_val:
+        split: train[:500]
+        path: json
+        data_files: ${train_data}/xvnli/xvnli_input_val_en.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Does the following statement follow? {}. Yes, no, or maybe? Answer in English:"
+            batched: True
+          set_transform:
+            transform:
+              _target_: src.tasks.vllm.data.LoadTransformImage
+              processor: ${blip_model}
+              image_root: ${flickr_image_root}
+              extension: ".jpg"
+              overwrite_image_size: ${image_size}
+      xvnli_fr_val:
+        split: train[:500]
+        path: json
+        data_files: ${train_data}/xvnli/xvnli_input_val_fr.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Does the following statement follow? {}. Yes, no, or maybe? Answer in English:"
+            batched: True
+          set_transform:
+            transform:
+              _target_: src.tasks.vllm.data.LoadTransformImage
+              processor: ${blip_model}
+              image_root: ${flickr_image_root}
+              extension: ".jpg"
+              overwrite_image_size: ${image_size}
+      xm3600_en:
+        split: train[:500]
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_en.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Caption in {}: "
+            batched: True
+          set_transform:
+            transform:
+              _target_: src.tasks.vllm.data.LoadTransformImage
+              processor: ${blip_model}
+              image_root: ${xm3600_image_root}
+              extension: ".jpg"
+              overwrite_image_size: ${image_size}
+      xm3600_fr:
+        split: train[:500]
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_fr.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Caption in {}: "
+            batched: True
+          set_transform:
+            transform:
+              _target_: src.tasks.vllm.data.LoadTransformImage
+              processor: ${blip_model}
+              image_root: ${xm3600_image_root}
+              extension: ".jpg"
+              overwrite_image_size: ${image_size}
+      xgqa_en_val:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_val_en.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Question: {}. Short answer (in English):"
+            batched: True
+          set_transform:
+            transform:
+              _target_: src.tasks.vllm.data.LoadTransformImage
+              processor: ${blip_model}
+              image_root: ${gqa_image_root}
+              extension: ".jpg"
+              overwrite_image_size: ${image_size}
+      xgqa_de_val:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_val_de.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Question: {}. Short answer (in English):"
+            batched: True
+          set_transform:
+            transform:
+              _target_: src.tasks.vllm.data.LoadTransformImage
+              processor: ${blip_model}
+              image_root: ${gqa_image_root}
+              extension: ".jpg"
+              overwrite_image_size: ${image_size}

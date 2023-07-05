@@ -1,0 +1,51 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: "Question: {} Short answer in English:"
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${flickr_image_root}
+        extension: ""
+  train:
+    split: train
+    path: json
+    data_files: ${train_data}/vqa/vqav2_vqa_en.json
+    _method_:
+      set_transform:
+        transform:
+          _target_: src.tasks.vllm.data.LoadTransformImage
+          processor: ${blip_model}
+          image_root: ${flickr_image_root}
+          extension: ""
+          train: True
+  val:
+    split: train[:1000]
+    path: json
+    data_files: ${train_data}/vqa/vqav2_val.json
+  test:
+    split: train[:5000]
+    path: json
+    data_files: ${train_data}/vqa/vqav2_val.json

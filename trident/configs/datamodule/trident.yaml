@@ -1,0 +1,32 @@
+_target_: src.datamodules.base.TridentDataModule
+_recursive_: false
+
+# defaults across built-in datamodules
+defaults:
+  # allows you to manually override on the cli with
+  # python run.py tokenizer.padding=true
+  - /tokenizer/trident@dataset_cfg._method_.map.function.tokenizer
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_: # get methods of _target_ object
+    map: # dataset.map -> tokenization
+      # kwargs for dataset.map
+      function: ???
+      batched: true
+      num_proc: 12
+
+datamodule_cfg:
+  setup:
+    _target_: src.datamodules.utils.load_dataset
+    _recursive_: false
+
+dataloader_cfg:
+  _target_: torch.utils.data.dataloader.DataLoader
+  batch_size: 8
+  num_workers: 8
+  pin_memory: true
+  val:
+    shuffle: false
+  test:
+    shuffle: false

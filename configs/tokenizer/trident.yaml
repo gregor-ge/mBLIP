@@ -1,0 +1,8 @@
+_partial_: true
+_target_: transformers.tokenization_utils_base.PreTrainedTokenizerBase.__call__
+self:
+    _target_: transformers.AutoTokenizer.from_pretrained
+    pretrained_model_name_or_path: ${module.model.pretrained_model_name_or_path}
+padding: false
+truncation: true
+max_length: 256

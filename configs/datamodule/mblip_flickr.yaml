@@ -1,0 +1,93 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: "Caption in {}: "
+        max_len: 128
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${flickr_image_root}
+        extension: ""
+#    with_format:
+#      type: "torch"
+  train:
+    split: train
+    path: json
+    data_files: ${train_data}/flickr/flickr_train.json
+    _method_:
+      map: # dataset.map -> tokenization
+        function:
+          _target_: src.tasks.vllm.data.TokenizeCLM
+          pretrained_model: ${llm}
+          context_column: context
+          target_column: label
+          template: "{}"
+          max_len: 128
+        batched: True
+      set_transform:
+        transform:
+          _target_: src.tasks.vllm.data.LoadTransformImage
+          processor: ${blip_model}
+          image_root: ${flickr_image_root}
+          extension: ""
+          train: True
+  val:
+      split: train
+      path: json
+      data_files: ${train_data}/flickr/flickr_val.json
+  test:
+    _datasets_:
+      flickr_en:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr__test.json
+      flickr_de:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_de_test.json
+      flickr_es:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_es_test.json
+      flickr_id:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_id_test.json
+      flickr_ja:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_ja_test.json
+      flickr_ru:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_ru_test.json
+      flickr_tr:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_tr_test.json
+      flickr_zh:
+        split: train
+        path: json
+        data_files: ${train_data}/flickr/flickr_zh_test.json

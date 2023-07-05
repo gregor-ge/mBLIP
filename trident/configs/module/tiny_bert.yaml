@@ -1,0 +1,23 @@
+# hydra by default would instantiate optimizer and scheduler when passed to HFModel
+# recursive: false -- pass config (possibly instantiated later) rather than instantiated class
+_recursive_: false
+_target_: src.modules.base.TridentModule
+
+defaults:
+# interleaved with setup so instantiated later (recursive false)
+- /evaluation: classification
+#to - /evaluation: tatoeba
+# - /overrides: base
+# - /mixins: base
+
+# # See: https://torchmetrics.readthedocs.io/en/latest/references/modules.html
+# metrics:
+#   # torchmetrics.class: outputs.attr
+#   # Available outputs.attr: {loss, logits, preds, ...}
+#   Accuracy: "preds" 
+
+model:
+  _target_: transformers.AutoModelForSequenceClassification.from_pretrained
+  num_labels: 3
+  # _target_: transformers.AutoModel.from_pretrained
+  pretrained_model_name_or_path: "prajjwal1/bert-tiny"

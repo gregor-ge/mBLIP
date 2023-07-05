@@ -1,0 +1,12 @@
+# # hydra by default would instantiate optimizer and scheduler when passed to HFModel
+# # recursive: false -- pass config (possibly instantiated later) rather than instantiated class
+
+_recursive_: false
+_target_: src.modules.base.TridentModule
+
+defaults:
+# interleaved with setup so instantiated later (recursive false)
+- /optimizer: ${optimizer}
+- /scheduler: ${scheduler}
+
+model: ???

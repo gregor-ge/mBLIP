@@ -1,0 +1,30 @@
+model_checkpoint_on_val:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  monitor: "val/acc" # name of the logged metric which determines when model is improving
+  mode: "max" # can be "max" or "min"
+  save_top_k: 1 # -1 -> all models are saved
+  dirpath: "checkpoints/"
+  auto_insert_metric_name: false
+  filename: "best_epoch-{epoch}_acc-{val/acc:.4f}"
+  verbose: true
+
+model_checkpoint_on_step:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  monitor: null # name of the logged metric which determines when model is improving
+  mode: "max" # can be "max" or "min"
+  every_n_train_steps: 3067 # truncated length of MNLI train / 16
+  verbose: true
+  save_top_k: -1 # -1 -> all models are saved
+  save_last: true # additionaly always save model from last epoch
+  dirpath: "checkpoints/"
+  auto_insert_metric_name: false
+
+# early_stopping:
+#   _target_: lightning.pytorch.callbacks.EarlyStopping
+#   monitor: "val/acc" # name of the logged metric which determines when model is improving
+#   mode: "max" # can be "max" or "min"
+#   min_delta: 0.0005
+#   patience: 5
+#   verbose: true
+#   strict: true
+#   check_finite: True

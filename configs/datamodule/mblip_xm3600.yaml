@@ -1,0 +1,185 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: "Caption in {}: "
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${xm3600_image_root}
+        extension: ".jpg"
+#    with_format:
+#      type: "torch"
+#  train:
+#    split: train[500:]
+#    path: json
+#    data_files: ${train_data}/pretrain/ccs_synthetic_filtered_large_1000000_mt.json
+  test:
+    _datasets_:
+      xm3600_en:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_en.json
+      xm3600_fr:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_fr.json
+      xm3600_zh:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_zh.json
+      xm3600_hi:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_hi.json
+      xm3600_he:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_he.json
+      xm3600_ro:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_ro.json
+      xm3600_th:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_th.json
+      xm3600_te:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_te.json
+      xm3600_fa:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_fa.json
+      xm3600_ko:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_ko.json
+      xm3600_fi:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_fi.json
+      xm3600_fil:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_fil.json
+      xm3600_mi:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_mi.json
+      xm3600_hu:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_hu.json
+      xm3600_id:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_id.json
+      xm3600_hr:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_hr.json
+      xm3600_quz:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_quz.json
+      xm3600_sv:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_sv.json
+      xm3600_sw:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_sw.json
+      xm3600_no:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_no.json
+      xm3600_vi:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_vi.json
+      xm3600_da:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_da.json
+      xm3600_ja:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_ja.json
+      xm3600_nl:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_nl.json
+      xm3600_ru:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_ru.json
+      xm3600_it:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_it.json
+      xm3600_uk:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_uk.json
+      xm3600_de:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_de.json
+      xm3600_pt:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_pt.json
+      xm3600_tr:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_tr.json
+      xm3600_cs:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_cs.json
+      xm3600_pl:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_pl.json
+      xm3600_bn:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_bn.json
+      xm3600_ar:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_ar.json
+      xm3600_es:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_es.json
+      xm3600_el:
+        split: train
+        path: json
+        data_files: ${train_data}/xm3600/xm3600_el.json
+#
+

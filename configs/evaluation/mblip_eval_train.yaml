@@ -1,0 +1,207 @@
+prepare_cfg:
+  val:
+    batch:
+      _datasets_:
+        val_split: null
+        xvnli_en_val:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.set_generation_mode
+          mode: generate
+          num_beams: 5
+          max_new_tokens: 10
+          min_new_tokens: 1
+          length_penalty: -1
+        xvnli_fr_val:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.set_generation_mode
+          mode: generate
+          num_beams: 5
+          max_new_tokens: 10
+          min_new_tokens: 1
+          length_penalty: -1
+        xm3600_en:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.set_generation_mode
+          mode: generate
+          num_beams: 5
+          max_new_tokens: 50
+          min_new_tokens: 1
+          length_penalty: 1
+        xm3600_fr:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.set_generation_mode
+          mode: generate
+          num_beams: 5
+          max_new_tokens: 50
+          min_new_tokens: 1
+          length_penalty: 1
+        xgqa_en_val:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.set_generation_mode
+          mode: generate
+          num_beams: 5
+          max_new_tokens: 10
+          min_new_tokens: 1
+          length_penalty: -1
+        xgqa_de_val:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.set_generation_mode
+          mode: generate
+          num_beams: 5
+          max_new_tokens: 10
+          min_new_tokens: 1
+          length_penalty: -1
+    outputs:
+      _datasets_:
+        val_split:
+          _partial_: true
+          _target_: src.tasks.vllm.evaluation.output_loss
+        xvnli_en_val:
+          _target_: src.tasks.vllm.evaluation.OutputGenerate
+          tokenizer: ${llm}
+        xvnli_fr_val:
+          _target_: src.tasks.vllm.evaluation.OutputGenerate
+          tokenizer: ${llm}
+        xm3600_en:
+          _target_: src.tasks.vllm.evaluation.OutputGenerate
+          tokenizer: ${llm}
+        xm3600_fr:
+          _target_: src.tasks.vllm.evaluation.OutputGenerate
+          tokenizer: ${llm}
+        xgqa_en_val:
+          _target_: src.tasks.vllm.evaluation.OutputGenerate
+          tokenizer: ${llm}
+        xgqa_de_val:
+          _target_: src.tasks.vllm.evaluation.OutputGenerate
+          tokenizer: ${llm}
+    step_outputs: null
+
+# Which keys/attributes are supposed to be collected from `outputs` and `batch`
+step_outputs:
+  val:
+    _datasets_:
+      val_split:
+        outputs:
+          - "loss"
+      xvnli_en_val:
+        outputs:
+          - "caption"
+        batch:
+          - "image_id"
+          - "text_label"
+      xvnli_fr_val:
+        outputs:
+          - "caption"
+        batch:
+          - "image_id"
+          - "text_label"
+      xm3600_en:
+        outputs:
+          - "caption"
+        batch:
+          - "image_id"
+          - "text_label"
+      xm3600_fr:
+        outputs:
+          - "caption"
+        batch:
+          - "image_id"
+          - "text_label"
+      xgqa_en_val:
+        outputs:
+          - "caption"
+        batch:
+          - "image_id"
+          - "text_label"
+      xgqa_de_val:
+        outputs:
+          - "caption"
+        batch:
+          - "image_id"
+          - "text_label"
+
+
+# either metrics or val_metrics and test_metrics
+# where the latter
+# metrics_cfg should be copied for each dataset by default unless _datasets_ is specified
+metrics_cfg:
+  # name of the metric used eg for logging
+  _datasets_:
+    val_split:
+      loss:
+        # instructions to instantiate metric, preferrably torchmetrics.Metric
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.validation_loss
+        # either "eval_step" or "epoch_end"
+        compute_on: "epoch_end"
+        kwargs:
+          loss: "outputs:loss"
+    xvnli_en_val:
+      acc:
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.classification_evaluation
+          print_examples: 10
+        compute_on: "epoch_end"
+        kwargs:
+          image_ids: "outputs:image_id"
+          text_labels: "outputs:text_label"
+          captions: "outputs:caption"
+    xvnli_fr_val:
+      acc:
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.classification_evaluation
+          print_examples: 10
+        compute_on: "epoch_end"
+        kwargs:
+          image_ids: "outputs:image_id"
+          text_labels: "outputs:text_label"
+          captions: "outputs:caption"
+    xm3600_en:
+      caption_metrics:
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.caption_evaluation
+          annotation_file: ${train_data}/xm3600/xm3600_coco_en.json
+          print_examples: 10
+        compute_on: "epoch_end"
+        kwargs:
+          image_ids: "outputs:image_id"
+          text_labels: "outputs:text_label"
+          captions: "outputs:caption"
+    xm3600_fr:
+      caption_metrics:
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.caption_evaluation
+          annotation_file: ${train_data}/xm3600/xm3600_coco_fr.json
+          print_examples: 10
+        compute_on: "epoch_end"
+        kwargs:
+          image_ids: "outputs:image_id"
+          text_labels: "outputs:text_label"
+          captions: "outputs:caption"
+    xgqa_en_val:
+      acc:
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.classification_evaluation
+          print_examples: 10
+        compute_on: "epoch_end"
+        kwargs:
+          image_ids: "outputs:image_id"
+          text_labels: "outputs:text_label"
+          captions: "outputs:caption"
+    xgqa_de_val:
+      acc:
+        metric:
+          _partial_: True
+          _target_: src.tasks.vllm.evaluation.classification_evaluation
+          print_examples: 10
+        compute_on: "epoch_end"
+        kwargs:
+          image_ids: "outputs:image_id"
+          text_labels: "outputs:text_label"
+          captions: "outputs:caption"

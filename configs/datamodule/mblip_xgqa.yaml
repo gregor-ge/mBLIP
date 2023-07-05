@@ -1,0 +1,177 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: "Question: {} Short answer in English:"
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${gqa_image_root}
+        extension: ".jpg"
+  train:
+    split: train
+    path: json
+    data_files: ${train_data}/xgqa/xgqa_input_train.json
+    _method_:
+      set_transform:
+        transform:
+          _target_: src.tasks.vllm.data.LoadTransformImage
+          processor: ${blip_model}
+          image_root: ${gqa_image_root}
+          extension: ".jpg"
+          train: True
+  val:
+    _datasets_:
+      xgqa_en_val:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_val_en.json
+      xgqa_de_val:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_val_de.json
+#      xgqa_bn_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_bn.json
+#      xgqa_id_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_id.json
+#      xgqa_ko_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_ko.json
+#      xgqa_pt_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_pt.json
+#      xgqa_ru_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_ru.json
+#      xgqa_zh_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_zh.json
+#      xgqa_bn_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_bn.json
+#      xgqa_de_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_de.json
+#      xgqa_en_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_en.json
+#      xgqa_id_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_id.json
+#      xgqa_ko_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_ko.json
+#      xgqa_pt_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_pt.json
+#      xgqa_ru_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_ru.json
+#      xgqa_zh_test:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_test_zh.json
+  test:
+    _datasets_:
+#      xgqa_en_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_en.json
+#      xgqa_de_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_de.json
+#      xgqa_bn_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_bn.json
+#      xgqa_id_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_id.json
+#      xgqa_ko_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_ko.json
+#      xgqa_pt_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_pt.json
+#      xgqa_ru_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_ru.json
+#      xgqa_zh_val:
+#        split: train
+#        path: json
+#        data_files: ${train_data}/xgqa/xgqa_input_val_zh.json
+      xgqa_bn_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_bn.json
+      xgqa_de_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_de.json
+      xgqa_en_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_en.json
+      xgqa_id_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_id.json
+      xgqa_ko_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_ko.json
+      xgqa_pt_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_pt.json
+      xgqa_ru_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_ru.json
+      xgqa_zh_test:
+        split: train
+        path: json
+        data_files: ${train_data}/xgqa/xgqa_input_test_zh.json
+#
+#
