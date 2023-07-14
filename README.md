@@ -1,6 +1,6 @@
 # mBLIP
 
-This is the repository for our work [**mBLIP: Efficient Bootstrapping of Multilingual Vision-LLMs**](TODO arxiv).
+This is the repository for our work [mBLIP: Efficient Bootstrapping of Multilingual Vision-LLMs](https://arxiv.org/abs/2307.06930).
 
 ## Model description
 mBLIP is a [BLIP-2](https://arxiv.org/abs/2301.12597) model which consists of 3 sub-models: a Vision Transformer (ViT), a Query-Transformer (Q-Former) and a large language model (LLM).
@@ -335,12 +335,12 @@ If you use our model or code, please cite the following:
                   Abhay Jain and
                   Radu Timofte and
                   Goran Glava\v{s}},
-  title        = {TODO},
+  title        = {mBLIP: Efficient Bootstrapping of Multilingual Vision-LLMs},
   journal      = {arXiv},
-  volume       = {abs/TODO},
+  volume       = {abs/2307.06930},
   year         = {2023},
-  url          = {https://arxiv.org/abs/TODO},
+  url          = {https://arxiv.org/abs/2307.06930},
   eprinttype    = {arXiv},
-  eprint       = {TODO},
+  eprint       = {2307.06930},
 }
 ```
