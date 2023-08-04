@@ -70,7 +70,7 @@ The entry point into our code is done by calling `python run.py experiment=EXPER
 On `blip_checkpoint`: We initialize our model with a BLIP-2 model checkpoint but only with the Q-Former and ViT. 
 Loading the model with `.from_pretrained("Salesforce/blip2-flan-t5-xl")` would load the LLM, too, which we
 do **not** want. Instead, we manually downloaded the shard containing the ViT and Q-Former [here](https://huggingface.co/Salesforce/blip2-flan-t5-xl/tree/main), remove any LLM weights from the state_dict, and
-save this state_dict to disk. `blip_checkpoint` points to this state_dict file.
+save this state_dict to disk (see [this example script](util/creating_blip_checkpoint.py)). `blip_checkpoint` points to this state_dict file.
 
 
 On `data_prefix`: Our data setup expects all dataset json files and images to be in specific folders relative to this.

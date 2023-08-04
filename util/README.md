@@ -19,3 +19,7 @@ If you only use 'standard' LoRA (using only query and value matrices), then you 
 the `prepare_shards()` and `merge_lora()` functions for space efficiency:
 This combination first re-shards the model to put the query and value matrices in separate shards and then only
 saves those shards after merging LoRA into them while re-using the shards from the original model.
+
+## Creating $blip_checkpoint
+[This script](creating_blip_checkpoint.py) shows how to create prepare the $blip_checkpoint by removing all language model parameters
+from the checkpoint downloaded from https://huggingface.co/Salesforce/blip2-flan-t5-xl/tree/main.
