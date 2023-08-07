@@ -25,6 +25,7 @@ class mBLIPModule(LightningModule):
                  blip_pretrained="Salesforce/blip2-flan-t5-xxl",
                  blip_pretrained_checkpoint="",
                  lm_pretrained="bigscience/mt0-xl",
+                 huggingface_checkpoint=None,
                  random_init_projection=True,
                  train_checkpoint=None,
                  load_8bit=True,
@@ -43,24 +44,33 @@ class mBLIPModule(LightningModule):
                  lora_checkpoint=None,
         ):
         super().__init__()
-        self.model = mBLIP(blip_pretrained=blip_pretrained,
-                           blip_pretrained_checkpoint=blip_pretrained_checkpoint,
-                           train_checkpoint=train_checkpoint,
-                           lm_pretrained=lm_pretrained,
-                           random_init_projection=random_init_projection,
-                           load_8bit=load_8bit,
-                           freeze_vit=freeze_vit,
-                           freeze_qformer=freeze_qformer,
-                           freeze_lm=freeze_lm,
-                           freeze_projection=freeze_projection,
-                           use_lora=use_lora,
-                           lora_alpha=lora_alpha,
-                           lora_r=lora_r,
-                           lora_bias=lora_bias,
-                           lora_dropout=lora_dropout,
-                           prefix_tokens=prefix_tokens,
-                           lora_checkpoint=lora_checkpoint,
-                           )
+
+        if huggingface_checkpoint is not None:
+            self.model = Blip2ForConditionalGeneration.from_pretrained(
+                huggingface_checkpoint,
+                load_in_8bit=load_8bit,
+                device_map="auto"
+            )
+
+        else:
+            self.model = mBLIP(blip_pretrained=blip_pretrained,
+                               blip_pretrained_checkpoint=blip_pretrained_checkpoint,
+                               train_checkpoint=train_checkpoint,
+                               lm_pretrained=lm_pretrained,
+                               random_init_projection=random_init_projection,
+                               load_8bit=load_8bit,
+                               freeze_vit=freeze_vit,
+                               freeze_qformer=freeze_qformer,
+                               freeze_lm=freeze_lm,
+                               freeze_projection=freeze_projection,
+                               use_lora=use_lora,
+                               lora_alpha=lora_alpha,
+                               lora_r=lora_r,
+                               lora_bias=lora_bias,
+                               lora_dropout=lora_dropout,
+                               prefix_tokens=prefix_tokens,
+                               lora_checkpoint=lora_checkpoint,
+                               )
         if gradient_checkpoint:
             self.model.language_model.gradient_checkpointing_enable()
         if compile:  # compile currently does not work with gradient checkpoint 2.0.1

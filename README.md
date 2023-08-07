@@ -177,6 +177,10 @@ HYDRA_FULL_ERROR=1 python3 run.py experiment=mblip_test_xgqa \
 ```
 </details>
 
+You can also use `module.model.huggingface_checkpoint=Gregor/mblip-mt0-xl` to directly load
+the checkpoint from HuggingFace. Note that 1) 8bit results are slightly worse than in
+the paper because the ViT and Q-Former is also loaded in 8bit and not just the LLM, and 2) training
+does not work with this option because the Q-Former is loaded in 8bit.
 
 #### Finetune
 
@@ -299,7 +303,8 @@ print(processor.decode(out[0], skip_special_tokens=True))
 </details>
 
 ##### In 8-bit precision (`int8`)
-
+>**Important:** Paper results only use int8 for the LLM weights while this loads all weights in int8. 
+> We see that this gives slightly worse results but currently int8 for some model parts is not supported by HuggingFace.
 <details>
 <summary> Click to expand </summary>
 
