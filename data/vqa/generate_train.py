@@ -9,16 +9,19 @@ lang_code2lang = {'af': 'Afrikaans', 'am': 'Amharic', 'ar': 'Arabic', 'az': 'Aze
 lang2code = {v:k for k,v in lang_code2lang.items()}
 
 
-vqa_templates = ["{0}. Short {1} answer:",
-                "Question: {0}. Brief answer (in {1}):",
+vqa_templates = ["{0} Short {1} answer:",
+                "Question: {0} Brief answer (in {1}):",
                  "Give a short answer in {1} to the following question. {0}",
                  "Answer the provided question in {1} with three words or less. {0}",
-                 "What is the {1} answer to this question? {0}"]
+                 "What is the {1} answer to this question? {0}",
+                 "Briefly answer in {1}. {0}"]
 
 vqg_templates = [
     "Given the image, generate a question in {} whose answer is: {}. Question:",
     'Based on the image, create a question (in {}) for which the answer is "{}".',
-    'From the image provided, come up with a {} question that leads to the reply: {}. Question:'
+    'From the image provided, come up with a {} question that leads to the reply: {}. Question:',
+    'What is a {} question for the image with the answer "{}"?',
+    'Given the image, what would be a {} question that has as answer "{}"?',
 ]
 
 def generate_raw(root):
@@ -59,7 +62,7 @@ def generate_en(data):
     json.dump(vqa_data, open("vqav2_vqa_en.json", "w"))
     json.dump(vqg_data, open("vqav2_vqg_en.json", "w"))
 
-def generate_mt(data_q, data_g, postfix=""):
+def generate_mt(data_q, data_g, mt_labels=None, postfix=""):
     random.seed(42)
     vqa_data = []
     vqg_data = []
@@ -70,7 +73,17 @@ def generate_mt(data_q, data_g, postfix=""):
         if len(example_q["context"].split("#")) == 2:
             lang, context = example_q["context"].split("#")
             lang = lang.strip()
+            code = lang2code[lang]
             label = example_q["label"]
+            if mt_labels and code != "en" and example_q["label"] in mt_labels[code]:
+                mt_label = mt_labels[code][label]
+                if mt_label == label or random.random() < 0.5:
+                    lang = "English"
+                else:
+                    mt_label_q_count += 1
+                    label = mt_label
+            else:
+                lang = "English"
             vqa_data.append({
                 "context": random.choice(vqa_templates).format(context, lang),
                 "label": label,
@@ -80,7 +93,17 @@ def generate_mt(data_q, data_g, postfix=""):
             # skip questions which have # in them (bad choice of delimiter in hindsight)
             lang, context = example_g["context"].split("#")
             lang = lang.strip()
+            code = lang2code[lang]
             label = example_q["label"]
+            if mt_labels and code != "en" and example_q["label"] in mt_labels[code]:
+                mt_label = mt_labels[code][label]
+                if mt_label == label or random.random() < 0.5:
+                    lang = "English"
+                else:
+                    mt_label_g_count += 1
+                    label = mt_label
+            else:
+                lang = "English"
             vqg_data.append({
                 "context": random.choice(vqg_templates).format(lang, label),
                 "label": context,
@@ -123,4 +146,5 @@ if __name__ == "__main__":
     else:
         raw_data_q = json.load(open("vqav2_mt_q_raw.json", encoding="utf-8"))
         raw_data_g = json.load(open("vqav2_mt_g_raw.json", encoding="utf-8"))
-        generate_mt(raw_data_q, raw_data_g)
+        mt_labels = json.load(open("vqav2_mt_google_labels.json"))
+        generate_mt(raw_data_q, raw_data_g, mt_labels, postfix="_mtlabels")

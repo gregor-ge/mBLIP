@@ -136,15 +136,28 @@ class mBLIP(Blip2PreTrainedModel):
         self.vision_model = self.vision_model.to("cuda")
 
         rank = int(os.environ.get("LOCAL_RANK", 0))
-        if "bloom" in lm_pretrained or "llama" in lm_pretrained:
-            self.llm_cast_dtype = torch.float16
-            self.language_model = AutoModelForCausalLM.from_pretrained(lm_pretrained,
-                                                                       # low_cpu_mem_usage=True,
-                                                                       # offload_state_dict=True,
-                                                                       torch_dtype="auto",
-                                                                       load_in_8bit=load_8bit,
-                                                                       device_map="auto"
-                                                                       )
+        if "bloom" in lm_pretrained or "llama" in lm_pretrained or "poly" in lm_pretrained:
+            self.llm_cast_dtype = torch.bfloat16
+            if isinstance(load_8bit, str) and load_8bit == "4bit":
+                print("Loading in 4bit")
+                self.language_model = AutoModelForCausalLM.from_pretrained(lm_pretrained,
+                                                                           # low_cpu_mem_usage=True,
+                                                                           # offload_state_dict=True,
+                                                                           torch_dtype="auto",
+                                                                           load_in_4bit=True,
+                                                                           bnb_4bit_quant_type="nf4",
+                                                                           bnb_4bit_use_double_quant=False,
+                                                                           bnb_4bit_compute_dtype=self.llm_cast_dtype,
+                                                                           device_map={"": rank},
+                                                                                  )
+            else:
+                self.language_model = AutoModelForCausalLM.from_pretrained(lm_pretrained,
+                                                                           # low_cpu_mem_usage=True,
+                                                                           # offload_state_dict=True,
+                                                                           torch_dtype="auto",
+                                                                           load_in_8bit=load_8bit,
+                                                                           device_map="auto"
+                                                                           )
         elif "flan-t5" in lm_pretrained:
             self.llm_cast_dtype = torch.bfloat16
             self.language_model = T5ForConditionalGeneration.from_pretrained(lm_pretrained,
@@ -156,13 +169,26 @@ class mBLIP(Blip2PreTrainedModel):
                                                                              )
         else:
             self.llm_cast_dtype = torch.bfloat16
-            self.language_model = MT5ForConditionalGeneration.from_pretrained(lm_pretrained,
-                                                                       # low_cpu_mem_usage=True,
-                                                                       # offload_state_dict=True,
-                                                                       torch_dtype="auto",
-                                                                       load_in_8bit=load_8bit,
-                                                                       device_map={"": rank},
-                                                                              )
+            if isinstance(load_8bit, str) and load_8bit == "4bit":
+                print("Loading in 4bit")
+                self.language_model = MT5ForConditionalGeneration.from_pretrained(lm_pretrained,
+                                                                           # low_cpu_mem_usage=True,
+                                                                           # offload_state_dict=True,
+                                                                           torch_dtype="auto",
+                                                                           load_in_4bit=True,
+                                                                           bnb_4bit_quant_type="nf4",
+                                                                           bnb_4bit_use_double_quant=True,
+                                                                           bnb_4bit_compute_dtype=self.llm_cast_dtype,
+                                                                           device_map={"": rank},
+                                                                                  )
+            else:
+                self.language_model = MT5ForConditionalGeneration.from_pretrained(lm_pretrained,
+                                                                           # low_cpu_mem_usage=True,
+                                                                           # offload_state_dict=True,
+                                                                           torch_dtype="auto",
+                                                                           load_in_8bit=load_8bit,
+                                                                           device_map={"": rank},
+                                                                                  )
         print("LM loaded")
         if freeze_vit:
             print("Freeze ViT")
@@ -193,7 +219,14 @@ class mBLIP(Blip2PreTrainedModel):
                 self.language_model = PeftModel.from_pretrained(self.language_model, lora_checkpoint)
             else:
                 target_modules = ["query_key_value"] if "bloom" in lm_pretrained else ["q", "v"]
-                task = "CAUSAL_LM" if "bloom" in lm_pretrained else "SEQ_2_SEQ_LM"
+                task = "CAUSAL_LM" if "bloom" in lm_pretrained or "poly" in lm_pretrained else "SEQ_2_SEQ_LM"
+                # we save those modules extra
+                # modules_to_save = []
+                # if not freeze_projection:
+                #     modules_to_save.append("language_projection")
+                # if not freeze_qformer:
+                #     modules_to_save.append("query_tokens")
+                #     modules_to_save.append("qformer")
                 if isinstance(use_lora, bool) or use_lora=="lora":
                     config = LoraConfig(
                         r=lora_r,
@@ -204,7 +237,12 @@ class mBLIP(Blip2PreTrainedModel):
                         task_type=task
                     )
                 elif use_lora == "lora_all":
-                    target_modules = ["q", ".k", "v", ".o", "wi_0", "wi_1", "wo"]
+                    if "mt0" in lm_pretrained:
+                        target_modules = ["q", ".k", "v", ".o", "wi_0", "wi_1", "wo"]
+                    elif "poly" in lm_pretrained:
+                        target_modules = ["c_attn", "c_proj", "c_fc"]
+                    elif "bloom" in lm_pretrained:
+                        target_modules = ["query_key_value", "dense", "dense_h_to_4h", "dense_4h_to_h"]
                     config = LoraConfig(
                         r=lora_r,
                         lora_alpha=lora_alpha,

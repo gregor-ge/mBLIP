@@ -1,0 +1,87 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: '{}'
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${flickr_image_root}
+        extension: ""
+#    with_format:
+#      type: "torch"
+  test:
+    _datasets_:
+      chair_short_val:
+        split: train[:1000]
+        path: json
+        data_files: ${train_data}/hallucinations/chair_val.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Caption in {}:"
+            batched: True
+      chair_long_val:
+        split: train[:1000]
+        path: json
+        data_files: ${train_data}/hallucinations/chair_val.json
+        _method_:
+          map: # dataset.map -> tokenization
+            function:
+              _target_: src.tasks.vllm.data.TokenizeCLM
+              pretrained_model: ${llm}
+              context_column: context
+              target_column: label
+              template: "Describe the image in {} with as much detail as possible."
+            batched: True
+#    chair_short_test:
+#      split: train[:1000]
+#      path: json
+#      data_files: ${train_data}/hallucinations/chair_test.json
+#      _method_:
+#        map: # dataset.map -> tokenization
+#          function:
+#            _target_: src.tasks.vllm.data.TokenizeCLM
+#            pretrained_model: ${llm}
+#            context_column: context
+#            target_column: label
+#            template: "Caption in {}:"
+#          batched: True
+#    chair_long_test:
+#      split: train[:1000]
+#      path: json
+#      data_files: ${train_data}/hallucinations/chair_test.json
+#      _method_:
+#        map: # dataset.map -> tokenization
+#          function:
+#            _target_: src.tasks.vllm.data.TokenizeCLM
+#            pretrained_model: ${llm}
+#            context_column: context
+#            target_column: label
+#            template: "Describe the image in {} with as much detail as possible."
+#          batched: True

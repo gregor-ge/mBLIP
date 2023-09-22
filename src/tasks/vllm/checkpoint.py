@@ -70,7 +70,7 @@ class mBLIPModelCheckpoint(ModelCheckpoint):
 class TeardownCallback(Callback):
     def on_test_end(self, trainer, pl_module):
         print("Waiting before tearing down after test")
-        time.sleep(60)
+        time.sleep(120)
     def on_fit_end(self, trainer, pl_module):
         print("Waiting before tearing down after fit")
-        time.sleep(60)
+        time.sleep(120)

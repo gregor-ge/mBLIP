@@ -41,7 +41,10 @@ dataset_cfg:
         transform:
           _target_: src.tasks.vllm.data.LoadTransformImage
           processor: ${blip_model}
-          image_root: ${train_image_root}
+          image_root:
+            - ${train_image_root}
+            - ${flickr_image_root}
+            - ${imagenet_image_root}
           extension: ""
           train: True
           overwrite_image_size: ${image_size}

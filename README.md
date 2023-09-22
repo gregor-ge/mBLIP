@@ -19,10 +19,11 @@ This allows the model to be used for tasks like:
 in 96 languages.
 
 #### Checkpoints
-| Model        | URL                                                        |
-|--------------|------------------------------------------------------------|
-| mBLIP mT0-XL | [Hugging Face](https://huggingface.co/Gregor/mblip-mt0-xl) |
-
+| Model                      | URL                                                                      |
+|----------------------------|--------------------------------------------------------------------------|
+| mBLIP mT0-XL               | [Hugging Face](https://huggingface.co/Gregor/mblip-mt0-xl)               |
+| mBLIP BLOOMZ-7B            | [Hugging Face](https://huggingface.co/Gregor/mblip-bloomz-7b)            |
+| mBLIP mT0-XL (old version) | [Hugging Face](https://huggingface.co/Gregor/mblip-mt0-xl/tree/v1-arxiv) |
 #### Languages
 mBLIP was trained on the following 96 languages:
 
@@ -120,6 +121,7 @@ HYDRA_FULL_ERROR=1 python3 run.py experiment=mblip_instruct \
 <details>
 <summary> Click to expand </summary>
 
+mT0
 ```bash
 NUM_GPUS=4
 ACCUM=4
@@ -133,14 +135,49 @@ HYDRA_FULL_ERROR=1 python3 run.py experiment=mblip_instruct \
   hydra.run.dir=$output \
   trainer.devices=$NUM_GPUS trainer.accumulate_grad_batches=$ACCUM \
   trainer.max_epochs=2 trainer.val_check_interval=0.2 \
-  ++train_file=task_mix_v1_mt.json \
+  ++train_file=task_mix_v2_mt.json \
   module.model.use_lora=lora_all  \
   module.optimizer.lr=0.00005 module.optimizer.weight_decay=0.1 \
-  module.model.train_checkpoint=/path/to/checkpoint/after/warmup  \
+  ++module._target_="src.modules.trident_module.blip_grouped_optimizer.GroupedOptimizerTridentModule" \
+  ++module.optimizer.blip_lr=0.00001 ++module.optimizer.llm_lora_lr=0.0002 \
+  module.model.train_checkpoint=/path/to/checkpoint/after/warmup  \ # Optional
   datamodule.dataloader_cfg.train.batch_size=8 datamodule.dataloader_cfg.train.num_workers=4 \
   datamodule.dataloader_cfg.val.batch_size=8 datamodule.dataloader_cfg.val.num_workers=0 \
   +trainer.strategy=ddp 
 ```
+
+BLOOMZ
+```bash
+NUM_GPUS=4
+ACCUM=8
+now=$(date +"%m_%d_%Y_%H_%M_%S")
+output=/a/mm/data/a-g-geigle/mblip/results/$now
+
+
+HYDRA_FULL_ERROR=1 python3 run.py experiment=mblip_instruct \
+  data_prefix=/a/mm/data/a-g-geigle \
+  ++imagenet_image_root=/a/mm/data/imagenet/train \
+  ++test_after_training=False \
+  hydra.run.dir=$output \
+  trainer.devices=$NUM_GPUS trainer.accumulate_grad_batches=$ACCUM \
+  trainer.max_epochs=2 trainer.val_check_interval=0.1 \
+  ++train_file=task_mix_v2_mt.json \
+  module.model.use_lora=lora_all \
+  ++module.model.random_init_projection=True  \
+  llm=bigscience/bloomz-7b1 \
+  ++datamodule.dataloader_cfg.collate_fn.padding_side="left" \ 
+  module.model.lora_r=8 module.model.lora_alpha=16 \
+  module.model.lora_dropout=0.05 \
+  module.model.load_8bit=4bit \
+  module.optimizer.lr=0.00001 module.optimizer.weight_decay=0.1 \
+  ++module._target_="src.modules.trident_module.blip_grouped_optimizer.GroupedOptimizerTridentModule" \
+  ++module.optimizer.blip_lr=0.00001 ++module.optimizer.llm_lora_lr=0.0002 \
+  ++module.model.train_checkpoint=null  \
+  datamodule.dataloader_cfg.train.batch_size=4 datamodule.dataloader_cfg.train.num_workers=1 \
+  datamodule.dataloader_cfg.val.batch_size=4 datamodule.dataloader_cfg.val.num_workers=1 \
+  +trainer.strategy=ddp 
+```
+
 </details>
 
 If you want to merge the LoRA weights after training into the LLM, use the scripts in [util](util).

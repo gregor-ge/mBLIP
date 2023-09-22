@@ -1,0 +1,49 @@
+defaults:
+ # base trident datamodule configuration
+ - trident
+
+dataloader_cfg:
+  # the `dataloder_cfg` straightforwardly implements the logic for dataloading
+  # in line with other relevant configuration.
+  # --- dataloader_cfg-level namespace ---
+  collate_fn:
+    _target_: src.tasks.vllm.data.DataCollatorForVisualCLM
+    tokenizer:
+      _target_: transformers.AutoTokenizer.from_pretrained
+      pretrained_model_name_or_path: ${llm}
+
+dataset_cfg:
+  _target_: datasets.load.load_dataset
+  _method_:
+    map: # dataset.map -> tokenization
+      function:
+        _target_: src.tasks.vllm.data.TokenizeCLM
+        pretrained_model: ${llm}
+        context_column: context
+        target_column: label
+        template: '{}'
+#        text_target_column: text_label
+#        target2str: { "yes": "yes", "no": "no", "maybe": "maybe" }
+      batched: True
+    set_transform:
+      transform:
+        _target_: src.tasks.vllm.data.LoadTransformImage
+        processor: ${blip_model}
+        image_root: ${flickr_image_root}
+        extension: ""
+#    with_format:
+#      type: "torch"
+  test:
+    _datasets_:
+      pope_random:
+        split: train
+        path: json
+        data_files: ${train_data}/hallucinations/coco_pope_random.json
+      pope_popular:
+        split: train
+        path: json
+        data_files: ${train_data}/hallucinations/coco_pope_popular.json
+      pope_adversarial:
+        split: train
+        path: json
+        data_files: ${train_data}/hallucinations/coco_pope_adversarial.json

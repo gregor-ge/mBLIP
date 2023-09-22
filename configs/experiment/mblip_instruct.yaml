@@ -19,6 +19,7 @@ train_file: task_mix_v2_mt.json
 xm3600_image_root: ${data_prefix}/iglue/datasets/Crossmodal3600/images
 flickr_image_root: ${data_prefix}/iglue/datasets/flickr30k/flickr_images
 gqa_image_root: ${data_prefix}/iglue/datasets/gqa/images
+imagenet_image_root: ${data_prefix}/imagenet/train
 
 blip_checkpoint: ${data_prefix}/mblip/checkpoints/blip2-flant5xl-nolm.bin
 blip_model: Salesforce/blip2-flan-t5-xl
@@ -50,6 +51,7 @@ datamodule:
       num_workers: 0
 
 module:
+  _target_: src.modules.trident_module.blip_grouped_optimizer.GroupedOptimizerTridentModule
   model:
     _target_: src.modules.modeling.mblip.mBLIPModule 
     blip_pretrained: ${blip_model}
@@ -64,13 +66,15 @@ module:
     gradient_checkpoint: True
     random_init_projection: False
     compile: False
-    use_lora: True
+    use_lora: lora_all
     lora_alpha: 16
     lora_r: 8
     lora_dropout: 0.05
     use_lora_vit: False
   optimizer:
     lr: 0.00005  #0.0005
+    blip_lr: 0.00001
+    llm_lora_lr: 0.0002
     weight_decay: 0.1
   scheduler:
     _target_: transformers.optimization.get_cosine_schedule_with_warmup

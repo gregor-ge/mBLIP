@@ -18,8 +18,10 @@ class DataCollatorForVisualCLM:
     pad_to_multiple_of: Optional[int] = 8
     label_pad_token_id: int = -100
     return_tensors: str = "pt"
+    padding_side: str = "right"
 
     def __call__(self, features):
+        self.tokenizer.padding_side = self.padding_side
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token='[PAD]'
 
@@ -76,8 +78,8 @@ class TokenizeCLM:
         self.context_column = context_column
         self.target_column = target_column
         self.template = template
-        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model)
-        self.decoder_only = "bloom" in pretrained_model or "llama" in pretrained_model
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained_model, use_fast=not "poly" in pretrained_model)
+        self.decoder_only = "bloom" in pretrained_model or "llama" in pretrained_model or "poly" in pretrained_model
         self.target2str = target2str
         self.text_target_column = text_target_column
         self.max_len = max_len
@@ -92,10 +94,10 @@ class TokenizeCLM:
         if self.target2str is not None and self.text_target_column is not None:
             model_inputs[self.text_target_column] = [self.target2str[x] for x in examples[self.text_target_column]]
         labels = self.tokenizer(targets, truncation=True, max_length=self.max_len)
-        if self.decoder_only:  # have to mask the context for the loss
+        if self.decoder_only and all(target for target in targets):  # have to mask the context for the loss
             for i in range(batch_size):
                 sample_input_ids = model_inputs["input_ids"][i]
-                label_input_ids = labels["input_ids"][i] + [self.tokenizer.pad_token_id]
+                label_input_ids = labels["input_ids"][i] + [self.tokenizer.eos_token_id]
                 model_inputs["input_ids"][i] = sample_input_ids + label_input_ids
                 labels["input_ids"][i] = [-100] * len(sample_input_ids) + label_input_ids
                 model_inputs["attention_mask"][i] = [1] * len(model_inputs["input_ids"][i])
@@ -104,7 +106,7 @@ class TokenizeCLM:
 
 
 class LoadTransformImage:
-    def __init__(self, image_root, processor="Salesforce/blip2-flan-t5-xl", target_column="image_id", extension="",
+    def __init__(self, image_root, processor="Salesforce/blip2-flan-t5-xxl", target_column="image_id", extension="",
                  train=False, train_scale=(0.5, 1.0), overwrite_image_size=None):
         self.image_root = image_root
         self.multiple_roots = not isinstance(image_root, str)
@@ -163,7 +165,7 @@ class LoadTransformImage:
     
 
 class LoadTransformImageMarvl:
-    def __init__(self, image_root, processor="Salesforce/blip2-flan-t5-xl", left_image_col="left_image", right_image_col="right_image", extension="",
+    def __init__(self, image_root, processor="Salesforce/blip2-flan-t5-xxl", left_image_col="left_image", right_image_col="right_image", extension="",
                  train=False, train_scale=(0.5, 1.0)):
         self.image_root = image_root
         self.multiple_roots = not isinstance(image_root, str)

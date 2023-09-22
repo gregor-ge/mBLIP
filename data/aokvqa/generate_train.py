@@ -11,11 +11,15 @@ lang2code = {v:k for k,v in lang_code2lang.items()}
 
 cot_answer_templates = ["{0}. So the answer is {1}",
                         "{0} so {1}",
-                        "{0}. This means the answer is {1}"]
+                        "{0}. This means the answer is {1}",
+                        "The answer is {1} because {0}.",
+                        "{1} because {1}."]
 
 cot_question_templates = ["Reason the answer to the following question. {}",
                           "Use reasoning to come to an answer for this question. {}",
-                          "Think step-by-step to answer this question. {}"]
+                          "Think step-by-step to answer this question. {}",
+                          "Answer the following question and explain your answer. {}",
+                          "{} What is the answer and why?"]
 
 explanation_templates = [
     "Question: {}: Answer: {}. Explanation:",

@@ -17,14 +17,29 @@ def merge(root, files, out):
 
 if __name__ == "__main__":
     root = ".."
+
+    # files = ["pretrain/ccs_synthetic_filtered_large_2273005_mt.json",
+    #          "mscoco/coco_train_mt.json",
+    #          "llava/detail_23k_mt.json",
+    #          "llava/conversation_58k_split_max3sent_mt.json",
+    #          "aokvqa/aokvqa_cot_en.json",
+    #          "aokvqa/aokvqa_explain_en.json",
+    #          "vqa/vqav2_vqa_mt.json",
+    #          "vqa/vqav2_vqg_mt.json"]
+    # out = "task_mix_v1_mt.json"
+
     files = ["pretrain/ccs_synthetic_filtered_large_2273005_mt.json",
              "mscoco/coco_train_mt.json",
              "llava/detail_23k_mt.json",
              "llava/conversation_58k_split_max3sent_mt.json",
              "aokvqa/aokvqa_cot_en.json",
              "aokvqa/aokvqa_explain_en.json",
-             "vqa/vqav2_vqa_mt.json",
-             "vqa/vqav2_vqg_mt.json"]
-    out = "task_mix_v1_mt.json"
+             "vqa/vqav2_vqa_mt_mtlabels.json",
+             "vqa/vqav2_vqg_mt_mtlabels.json",
+             "pretrain/ccs_synthetic_match_1000-601000_mt_seed42.json",
+             "imagenet/imagenet_8iter.json",
+             "imagenet/imagenet_8iter_decide.json"
+             ]
+    out = "task_mix_v2_mt.json"
 
     merge(root, files, out)

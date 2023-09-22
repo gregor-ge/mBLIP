@@ -1,0 +1,37 @@
+prepare_cfg:
+  batch:
+      _partial_: True
+      _target_: src.tasks.vllm.evaluation.set_generation_mode
+      mode: generate
+      num_beams: 5
+      max_new_tokens: 256
+      min_new_tokens: 1
+      length_penalty: 1
+      repetition_penalty: 1.5
+  outputs:
+      _target_: src.tasks.vllm.evaluation.OutputGenerate
+      tokenizer: ${llm}
+  step_outputs: null
+
+# Which keys/attributes are supposed to be collected from `outputs` and `batch`
+step_outputs:
+    outputs:
+      - "caption"
+    batch:
+      - "image_id"
+      - "text_label"
+
+# either metrics or val_metrics and test_metrics
+# where the latter
+# metrics_cfg should be copied for each dataset by default unless _datasets_ is specified
+metrics_cfg:
+  # name of the metric used eg for logging
+    chair:
+      metric:
+        _partial_: True
+        _target_: src.tasks.vllm.evaluation.chair
+      compute_on: "epoch_end"
+      kwargs:
+        image_ids: "outputs:image_id"
+        text_labels: "outputs:text_label"
+        captions: "outputs:caption"
