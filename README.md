@@ -369,6 +369,9 @@ print(processor.decode(out[0], skip_special_tokens=True))
 ## License
 Our model and code is MIT licensed.
 
+## Contact
+This repository was created by Gregor Geigle and [Abhay Jain](https://github.com/jain-abhay). If you have any questions, feel free to open an issue.
+
 ## Citation
 If you use our model or code, please cite the following:
 ```
