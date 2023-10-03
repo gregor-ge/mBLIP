@@ -2,6 +2,14 @@
 
 This is the repository for our work [mBLIP: Efficient Bootstrapping of Multilingual Vision-LLMs](https://arxiv.org/abs/2307.06930).
 
+### Updates
+**02.10.23:** Updates for v2 on arxiv:
+* Support for training and evaluating pure decoders (BLOOMZ)
+* 4bit bnb LLM loading
+* Training data: VQA with translated labels, ImageNet, Caption/ImageNet matching task
+* Evaluation: Added POPE and CHAIR for object hallucination evaluation
+
+
 ## Model description
 mBLIP is a [BLIP-2](https://arxiv.org/abs/2301.12597) model which consists of 3 sub-models: a Vision Transformer (ViT), a Query-Transformer (Q-Former) and a large language model (LLM).
 
