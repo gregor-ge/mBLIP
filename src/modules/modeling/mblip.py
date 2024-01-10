@@ -113,6 +113,8 @@ class mBLIP(Blip2PreTrainedModel):
             config.use_decoder_only_language_model = True
         config.text_config = {}
         lm_config = AutoConfig.from_pretrained(lm_pretrained)
+        if "mblip" in lm_pretrained:
+            lm_config = lm_config.text_config
         config.text_config = lm_config
         super().__init__(config)
 
@@ -136,7 +138,30 @@ class mBLIP(Blip2PreTrainedModel):
         self.vision_model = self.vision_model.to("cuda")
 
         rank = int(os.environ.get("LOCAL_RANK", 0))
-        if "bloom" in lm_pretrained or "llama" in lm_pretrained or "poly" in lm_pretrained:
+        if "mblip" in lm_pretrained:
+            self.llm_cast_dtype = torch.bfloat16
+            if isinstance(load_8bit, str) and load_8bit == "4bit":
+                print("Loading in 4bit")
+                mblip = Blip2ForConditionalGeneration.from_pretrained(lm_pretrained,
+                                                                           # low_cpu_mem_usage=True,
+                                                                           # offload_state_dict=True,
+                                                                           torch_dtype="auto",
+                                                                           load_in_4bit=True,
+                                                                           bnb_4bit_quant_type="nf4",
+                                                                           bnb_4bit_use_double_quant=False,
+                                                                           bnb_4bit_compute_dtype=self.llm_cast_dtype,
+                                                                           device_map={"": rank},
+                                                                                  )
+            else:
+                mblip = Blip2ForConditionalGeneration.from_pretrained(lm_pretrained,
+                                                                           # low_cpu_mem_usage=True,
+                                                                           # offload_state_dict=True,
+                                                                           torch_dtype="auto",
+                                                                           load_in_8bit=load_8bit,
+                                                                           device_map="auto"
+                                                                           )
+            self.language_model = mblip.language_model
+        elif "bloom" in lm_pretrained or "llama" in lm_pretrained or "poly" in lm_pretrained:
             self.llm_cast_dtype = torch.bfloat16
             if isinstance(load_8bit, str) and load_8bit == "4bit":
                 print("Loading in 4bit")
